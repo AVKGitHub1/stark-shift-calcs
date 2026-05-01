@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"import arc; print\\(arc.__version__\\); dp = arc.DynamicPolarizability\\(arc.Rubidium87\\(\\), 5, 0, 0.5\\); print\\('OK'\\); import inspect; print\\(inspect.signature\\(dp.defineBasis\\)\\); print\\(inspect.signature\\(dp.getPolarizability\\)\\)\")"
+    ]
+  }
+}
