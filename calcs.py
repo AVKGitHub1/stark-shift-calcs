@@ -271,6 +271,10 @@ def plot_level_diagram(ax, result: dict,
 
     colors = {"scalar": "tab:blue", "vector": "tab:green", "tensor": "tab:red"}
     offset = 0.18
+    # vertical span in plot data units used to compute label offsets
+    span = max_abs / scale if scale else max_abs or 1.0
+    # Vertical offset keeps text clear of arrowheads.
+    text_vpad = 0.02 * span
     value_labels = []
     arrow_segments = []
     level_segments = []
@@ -290,9 +294,11 @@ def plot_level_diagram(ax, result: dict,
                 arrowprops=dict(arrowstyle="->", color=colors[key], lw=1.6),
                 zorder=2,
             )
+            # Place the label directly above/below the arrow tip.
+            label_y = value + (text_vpad if value >= 0 else -text_vpad)
             label = ax.text(
-                x + 0.02, value, f"{value:+.3g}",
-                fontsize=7, color=colors[key], ha="left",
+                x, label_y, f"{value:+.3g}",
+                fontsize=7, color=colors[key], ha="center",
                 va="bottom" if value >= 0 else "top",
                 zorder=3,
             )
