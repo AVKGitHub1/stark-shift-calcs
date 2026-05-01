@@ -21,7 +21,7 @@ is documented separately in [physics.md](physics.md).
 ## Files
 
 | File | Purpose |
-|---|---|
+| --- | --- |
 | [calcs.py](calcs.py) | GUI-agnostic physics. Validates the state, normalizes the polarization, gets J-basis polarizabilities from ARC, projects onto F via Clebsch-Gordan, and renders the level-diagram plot. |
 | [pyqt_gui.py](pyqt_gui.py) | Desktop GUI built on PyQt6 + matplotlib. |
 | [marimo_gui.py](marimo_gui.py) | Browser GUI as a [marimo](https://marimo.io) reactive notebook. |
