@@ -8,6 +8,16 @@ returns the scalar, vector, and tensor light shifts in Hz.
 The physics — formulas, sign conventions, validity assumptions, references —
 is documented separately in [physics.md](physics.md).
 
+## GUI Example
+
+### PyQT
+
+![PyQt GUI Screenshot](example/Rb87_5P3-2_F1_830_1W_200um_pyqt.png)
+
+### Marimo
+
+![Marimo GUI Screenshot](example/Rb87_5P3-2_F1_830_1W_200um_marimo.png)
+
 ## Files
 
 | File | Purpose |
