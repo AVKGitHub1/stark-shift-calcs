@@ -24,6 +24,7 @@ is documented separately in [physics.md](physics.md).
 | --- | --- |
 | [calcs.py](calcs.py) | GUI-agnostic physics. Validates the state, normalizes the polarization, gets J-basis polarizabilities from ARC, projects onto F via Clebsch-Gordan, and renders the level-diagram plot. |
 | [pyqt_gui.py](pyqt_gui.py) | Desktop GUI built on PyQt6 + matplotlib. |
+| [pyqt_polarizability_gui.py](pyqt_polarizability_gui.py) | Desktop GUI for ARC scalar/vector/tensor dynamic polarizabilities without converting them to Stark shifts. |
 | [marimo_gui.py](marimo_gui.py) | Browser GUI as a [marimo](https://marimo.io) reactive notebook. |
 | [physics.md](physics.md) | Derivation and conventions for the formulas. |
 | [prompt.md](prompt.md) | Original feature spec. |
@@ -53,6 +54,15 @@ python pyqt_gui.py
 A window opens with all the inputs on the left and a text + plot output panel
 on the right. Click **Compute**; if `m_F` was left blank, a level diagram is
 drawn and **Save plot...** becomes enabled.
+
+For the matching dynamic polarizability GUI, run:
+
+```sh
+python pyqt_polarizability_gui.py
+```
+
+This uses the same ARC calculation backend but reports only the J-basis
+scalar, vector, and tensor polarizabilities in `Hz m^2/V^2`.
 
 ### Marimo notebook
 

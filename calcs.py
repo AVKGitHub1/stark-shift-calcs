@@ -155,10 +155,9 @@ def get_polarizabilities(atom, n: int, l: int, j: float,
     return float(result[0]), float(result[1] or 0.0), float(result[2] or 0.0)
 
 
-def stark_shift_for_state(alpha_S: float, alpha_V: float, alpha_T: float,
-                           E_squared: float, A_pol: float, B_pol: float,
-                           j: float, I: float, f: float, mf: float) -> dict:
-    """Stark shift contributions (in Hz) for the single state ``|F, mF>``."""
+def hyperfine_projection_factors(j: float, I: float, f: float,
+                                 mf: float) -> dict:
+    """Return J-basis scalar/vector/tensor factors for ``|F, mF>``."""
     scalar = vector = tensor = 0.0
     for mj in _half_integer_range(j):
         mi = mf - mj
@@ -171,19 +170,83 @@ def stark_shift_for_state(alpha_S: float, alpha_V: float, alpha_T: float,
         weight = cg * cg
         if weight < 1e-15:
             continue
-        scalar_j = -0.25 * alpha_S * E_squared
-        vector_j = (-0.25 * A_pol * alpha_V * E_squared * mj / j
-                    if j > 1e-9 else 0.0)
+        scalar += weight
+        if j > 1e-9:
+            vector += weight * mj / j
         if j > 0.5 + 1e-9:
-            tensor_j = (-0.25 * B_pol * alpha_T * E_squared
-                        * (3 * mj * mj - j * (j + 1))
-                        / (j * (2 * j - 1)))
-        else:
-            tensor_j = 0.0
-        scalar += weight * scalar_j
-        vector += weight * vector_j
-        tensor += weight * tensor_j
+            tensor += (
+                weight * (3 * mj * mj - j * (j + 1))
+                / (j * (2 * j - 1))
+            )
     return {"scalar": scalar, "vector": vector, "tensor": tensor}
+
+
+def project_polarizabilities(alpha_S: float, alpha_V: float, alpha_T: float,
+                             j: float, I: float, f: float,
+                             mf: float) -> dict:
+    """Project J-basis polarizability terms onto a hyperfine sublevel."""
+    factors = hyperfine_projection_factors(j, I, f, mf)
+    return {
+        "scalar": alpha_S * factors["scalar"],
+        "vector": alpha_V * factors["vector"],
+        "tensor": alpha_T * factors["tensor"],
+        "factors": factors,
+    }
+
+
+def compute_polarizabilities(*, atom_name: str, n: int, l: int, j: float,
+                             wavelength: float, f: Optional[float] = None,
+                             mf: Optional[float] = None,
+                             basis_window: int = 25) -> dict:
+    """Top-level entry point for dynamic polarizabilities.
+
+    Returns ARC's J-basis scalar, vector, and tensor dynamic polarizabilities
+    in ``Hz·m^2/V^2`` for ``|n, l, J>`` at the requested wavelength. If
+    ``f`` is supplied, also returns the hyperfine-projected components for
+    either the supplied ``mf`` or every allowed ``mF`` when ``mf`` is ``None``.
+    """
+    atom = get_atom(atom_name)
+    if f is None:
+        validate_state(atom, n, l, j, abs(j - atom.I), None)
+    else:
+        validate_state(atom, n, l, j, f, mf)
+    alpha_S, alpha_V, alpha_T = get_polarizabilities(
+        atom, n, l, j, wavelength, basis_window=basis_window,
+    )
+    projected = None
+    if f is not None:
+        mf_list = _half_integer_range(f) if mf is None else [mf]
+        projected = {
+            m: project_polarizabilities(
+                alpha_S, alpha_V, alpha_T, j, atom.I, f, m,
+            )
+            for m in mf_list
+        }
+    return {
+        "atom_name": atom_name,
+        "n": n, "l": l, "j": j, "f": f, "mf": mf,
+        "I": atom.I,
+        "wavelength": wavelength,
+        "basis_window": basis_window,
+        "alpha_S": alpha_S,
+        "alpha_V": alpha_V,
+        "alpha_T": alpha_T,
+        "projected_polarizabilities": projected,
+    }
+
+
+def stark_shift_for_state(alpha_S: float, alpha_V: float, alpha_T: float,
+                           E_squared: float, A_pol: float, B_pol: float,
+                           j: float, I: float, f: float, mf: float) -> dict:
+    """Stark shift contributions (in Hz) for the single state ``|F, mF>``."""
+    projected = project_polarizabilities(
+        alpha_S, alpha_V, alpha_T, j, I, f, mf,
+    )
+    return {
+        "scalar": -0.25 * E_squared * projected["scalar"],
+        "vector": -0.25 * E_squared * A_pol * projected["vector"],
+        "tensor": -0.25 * E_squared * B_pol * projected["tensor"],
+    }
 
 
 def compute_stark_shifts(*, atom_name: str, n: int, l: int, j: float, f: float,
